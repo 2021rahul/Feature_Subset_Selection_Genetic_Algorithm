@@ -57,13 +57,15 @@ def pop_observe(pop_qubits):
 
 
 def pop_accuracy(pop_obs_qubits):
-    accuracy = []
+    mean_accuracy = []
+    cross_validation_score = []
     for clabits in pop_obs_qubits:
         dataX, dataY = data_handler.dataset_with_feature_subset(clabits)
         LR_model = algorithm.train_LR(dataX, dataY)
         cv_score = algorithm.cross_validation_score(LR_model, dataX, dataY, 10)
-        accuracy.append(numpy.mean(cv_score))
-    return accuracy
+        cross_validation_score.append(cv_score)
+        mean_accuracy.append(numpy.mean(cv_score))
+    return mean_accuracy, cross_validation_score
 
 
 #def pop_accuracy(pop_obs_qubits):
@@ -140,49 +142,21 @@ def pop_selection(pop_qubits, pop_obs_qubits, qubits_accuracy, pop_cross_qubits,
             final_pop_obs_qubits.append(obs_qubit)
     return final_pop_qubits, final_pop_obs_qubits
 
+def print_output(final_pop_qubits, final_pop_obs_qubits, final_qubits_cross_val_score):
+    f = open(config.OUTPUT_FILEPATH, 'w')
+    f.write('VERSION : ' + config.VERSION + '\n')
+    f.write('NUM_FEATURES : ' + str(config.NUM_FEATURES) + '\n')
+    f.write('POPULATION_SIZE : ' + str(config.POPULATION_SIZE) + '\n')
+    f.write('EQDE_MAXITER : ' + str(config.EQDE_MAXITER) + '\n')
+    f.write('ELITISM : ' + str(config.ELITISM) + '\n')
+    f.write('F : ' + str(config.F) + '\n')
+    f.write('CR : ' + str(config.CR) + '\n')
+    f.write('TEST_SIZE : ' + str(config.TEST_SIZE) + '\n' + '\n')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    for fold in range(0, 10):
+        f.write("FOLD_" + str(fold) + "  --------------------\n\n")
+        for solution in range(0, config.POPULATION_SIZE):
+            f.write("Solution_" + str(solution) + ":" + '\n')
+            f.write("ACCURACY: " + str(final_qubits_cross_val_score[solution][fold]) + '\n')
+            f.write('QUBITS: ' + ' '.join(str(el) for el in final_pop_qubits[solution]) + '\n')
+            f.write('OBSERVED_QUBITS: ' + ' '.join(str(el) for el in final_pop_obs_qubits[solution]) + '\n\n')
